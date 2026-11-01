@@ -23,12 +23,12 @@ npm run dev
 
 - `/` — home
 - `/about` — about the clinic
-- `/services` — services
-- `/cat-care` — cat care
-- `/dog-care` — dog care
-- `/pet-advice` — pet advice
+- `/services` — health checks, preventative care, dentistry, surgery, diagnostics, and routine services
+- `/pet-advice` — guidance for cats, dogs, birds, reptiles, nutrition, and behaviour
 - `/team` — the clinic team
 - `/contact` — phone and location
+
+The former `/cat-care` and `/dog-care` URLs redirect to `/pet-advice`.
 
 Clinic details, the orange Civic Centre theme, and fallback staff listings are
 maintained in `src/data/clinics.js`. Clinic-owned logo assets are in
@@ -47,10 +47,9 @@ src/
 ```
 
 The two clinic domains in the site configuration are
-`fivewaysvet.com.au` and `civiccentrevets.com.au`. Point both domains (and their
-`www` aliases) to the same cPanel document root to host one deployment for both
-sites. If they use different document roots, deploy the same `dist/` build to
-each root.
+`fivewaysvet.com.au` and `civiccentrevets.com.au`. On the cPanel account each
+domain has its own folder under `public_html/`, so the workflow deploys the same
+`dist/` build to both folders and the site picks the clinic from the hostname.
 
 For local previews, run `npm run dev`, then add `?clinic=civic-centre` to the
 URL to preview the Civic Centre theme. The default local site is Graceville
@@ -124,8 +123,18 @@ secrets for the clinics' cPanel FTP account:
 - `FTP_HOST` — the cPanel FTP server hostname
 - `FTP_USERNAME` — the FTP account username
 - `FTP_PASSWORD` — the FTP account password
-- `FTP_SERVER_DIR` — this site's document-root path from the FTP account, with
-  a trailing slash
+- `FTP_SERVER_DIR_GRACEVILLE` — path to the Graceville site folder, with a
+  trailing slash. On the shared cPanel account this is the
+  `public_html/fivewaysvet.com.au` folder, e.g. `/public_html/fivewaysvet.com.au/`
+  (relative to the FTP account's home directory).
+- `FTP_SERVER_DIR_CIVIC` — likewise `/public_html/civiccentrevets.com.au/`.
+
+Each push deploys the same build to both folders. Never point either path at
+`public_html/` itself: that folder also holds the Kommunity site and WordPress
+files. Check the paths against the FTP account's root (a restricted FTP account
+may need a path without the `/public_html` prefix). The first deploy uploads
+over any existing files in those folders, so back up the old WordPress sites
+first.
 
 Optional Actions variables can be used to configure separate booking links and
 the shared staff sheet:

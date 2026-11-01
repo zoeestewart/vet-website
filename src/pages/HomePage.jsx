@@ -12,16 +12,16 @@ const topics = [
     image: 'about',
   },
   {
-    title: 'Cat care',
-    copy: 'Guidance for your cat’s health, behaviour and changing needs.',
-    to: '/cat-care',
-    image: 'cat',
+    title: 'Pet advice',
+    copy: 'Helpful guidance for cats, dogs, birds and other companions.',
+    to: '/pet-advice',
+    image: 'dog',
   },
   {
-    title: 'Dog care',
-    copy: 'Support for dogs at every age, from new companions to seniors.',
-    to: '/dog-care',
-    image: 'dog',
+    title: 'Meet our team',
+    copy: 'Get to know the people who care for your pets.',
+    to: '/team',
+    image: 'home',
   },
 ]
 

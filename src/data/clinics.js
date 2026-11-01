@@ -12,7 +12,7 @@ export const clinics = [
     websiteUrl: 'https://fivewaysvet.com.au/',
     logo: '/images/clinic-logo.jpg',
     images: {
-      home: '/images/graceville/home.jpg',
+      home: '/images/graceville/hero.jpg',
       about: '/images/graceville/about.jpg',
       cat: '/images/graceville/cat.jpg',
       dog: '/images/graceville/dog.jpg',
@@ -35,6 +35,7 @@ export const clinics = [
       {
         name: 'Dr Natasha Taylor',
         role: 'Owner, Doctor of Veterinary Medicine',
+        photo: '/images/graceville/natasha.jpg',
         bio: 'Natasha has cared for small animals and wildlife since 1993, and takes time to explore treatment options with every family.',
       },
       {
@@ -42,6 +43,11 @@ export const clinics = [
         role: 'Senior Veterinary Nurse',
         bio: 'Vanessa is the primary senior veterinary nurse at Graceville Fiveways Veterinary.',
       },
+      { name: 'Clem', role: 'Team member', photo: '/images/graceville/clem.jpg' },
+      { name: 'Gav', role: 'Team member', photo: '/images/graceville/gav.jpg' },
+      { name: 'Jessica', role: 'Team member', photo: '/images/graceville/jessica.jpg' },
+      { name: 'Kellie', role: 'Team member', photo: '/images/graceville/kellie.jpg' },
+      { name: 'Kerrie', role: 'Team member', photo: '/images/graceville/kerrie.jpg' },
     ],
   },
   {
@@ -52,8 +58,8 @@ export const clinics = [
     websiteUrl: 'https://www.civiccentrevets.com.au/',
     logo: '/images/civic-logo.jpg',
     images: {
-      home: '/images/civic/dog.jpg',
-      about: '/images/civic/about.jpg',
+      home: '/images/civic/hero.jpg',
+      about: '/images/civic/love-your-pet.jpg',
       cat: '/images/civic/cat.jpg',
       dog: '/images/civic/dog.jpg',
     },
@@ -75,6 +81,7 @@ export const clinics = [
       {
         name: 'Dr Natasha Taylor',
         role: 'Owner, Doctor of Veterinary Medicine',
+        photo: '/images/civic/natasha.jpg',
         bio: 'Natasha has cared for wildlife and small animals since 1993 and took over Civic Centre Veterinary Surgery in 2010.',
       },
       {

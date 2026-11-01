@@ -29,7 +29,7 @@ jobs:
           VITE_STAFF_CSV_URL: ${{ vars.VITE_STAFF_CSV_URL }}
         run: npm run build
 
-      - name: Deploy via FTP to cPanel
+      - name: Deploy Graceville Fiveways to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_HOST }}
@@ -38,4 +38,15 @@ jobs:
           port: 21
           protocol: ftp
           local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          server-dir: ${{ secrets.FTP_SERVER_DIR_GRACEVILLE }}
+
+      - name: Deploy Civic Centre to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftp
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_SERVER_DIR_CIVIC }}
