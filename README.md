@@ -121,17 +121,12 @@ FTPS on port 21 whenever
 you push to `main`. In this repository's GitHub settings, add these Actions
 secrets for the clinics' cPanel FTP account:
 
-- `FTP_FIVE_PASSWORD` — the Graceville FTP account password
-- `FTP_PASSWORD` — the Civic Centre FTP account password
+- `FTP_PASSWORD` — the shared `git-actions` FTP account password
 
-The FTP usernames and server are configured in the workflow. Graceville's
-`server-dir` is `../`, because that FTP account starts in
-`public_html/fivewaysvet.com.au/git-login/`; this targets its parent site
-directory. Civic Centre's destination is currently
-`public_html/civiccentrevets.com.au/` relative to its FTP account's starting
-directory. Confirm that account's starting directory before deploying; FTP
-paths are relative to the account, not necessarily the cPanel home. Back up
-existing site files before the first deploy.
+The workflow uses the `git-actions@kommunity.com.au` username and both deploy
+paths are relative to its `public_html/` starting directory:
+`fivewaysvet.com.au/` and `civiccentrevets.com.au/`. Confirm that the account
+has access to both folders. Back up existing site files before the first deploy.
 
 Optional Actions variables can be used to configure separate booking links and
 the shared staff sheet:

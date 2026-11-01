@@ -52,7 +52,7 @@ export default function StaffDirectory() {
     <>
       {isLoading && (
         <p className="mt-5 text-sm text-[#6b655f]" role="status">
-          Loading team details from the Google Sheet…
+          Loading team details
         </p>
       )}
       {loadError && (

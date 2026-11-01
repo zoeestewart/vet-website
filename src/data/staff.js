@@ -50,6 +50,9 @@ export function parseStaffCsv(csv, clinicId) {
   const bioColumn = headers.includes('bio')
     ? headers.indexOf('bio')
     : headers.indexOf('blurb')
+  const photoColumn = headers.includes('photo')
+    ? headers.indexOf('photo')
+    : -1
 
   if (nameColumn === -1 || roleColumn === -1) {
     throw new Error(
@@ -87,7 +90,7 @@ export function parseStaffCsv(csv, clinicId) {
         name,
         role,
         bio,
-        photo: value('photo'),
+        photo: photoColumn === -1 ? '' : fields[photoColumn]?.trim() || '',
       },
     ]
   })
