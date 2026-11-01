@@ -32,21 +32,21 @@ jobs:
       - name: Deploy Graceville Fiveways to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
+          server: 103.254.137.129
+          username: git-login@fivewaysvet.com.au
+          password: ${{ secrets.FTP_FIVE_PASSWORD }}
           port: 21
-          protocol: ftp
+          protocol: ftps
           local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_SERVER_DIR_GRACEVILLE }}
+          server-dir: ../
 
       - name: Deploy Civic Centre to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USERNAME }}
+          server: 103.254.137.129
+          username: git-login@civiccentrevets.com.au
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
-          protocol: ftp
+          protocol: ftps
           local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_SERVER_DIR_CIVIC }}
+          server-dir: ../

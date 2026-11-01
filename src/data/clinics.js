@@ -31,24 +31,6 @@ export const clinics = [
     heroTitle: 'Special care for your pets',
     introduction:
       'Our veterinary hospital has been part of the local community for years. We care for cats and dogs, rabbits and guinea pigs, birds, horses and even the occasional snake.',
-    staff: [
-      {
-        name: 'Dr Natasha Taylor',
-        role: 'Owner, Doctor of Veterinary Medicine',
-        photo: '/images/graceville/natasha.jpg',
-        bio: 'Natasha has cared for small animals and wildlife since 1993, and takes time to explore treatment options with every family.',
-      },
-      {
-        name: 'Vanessa',
-        role: 'Senior Veterinary Nurse',
-        bio: 'Vanessa is the primary senior veterinary nurse at Graceville Fiveways Veterinary.',
-      },
-      { name: 'Clem', role: 'Team member', photo: '/images/graceville/clem.jpg' },
-      { name: 'Gav', role: 'Team member', photo: '/images/graceville/gav.jpg' },
-      { name: 'Jessica', role: 'Team member', photo: '/images/graceville/jessica.jpg' },
-      { name: 'Kellie', role: 'Team member', photo: '/images/graceville/kellie.jpg' },
-      { name: 'Kerrie', role: 'Team member', photo: '/images/graceville/kerrie.jpg' },
-    ],
   },
   {
     id: 'civic-centre',
@@ -77,25 +59,6 @@ export const clinics = [
     heroTitle: 'Personal care for every family member',
     introduction:
       'Civic Centre Veterinary Surgery provides personal and affordable health care for your other family members. We want you and your pets to feel welcome, with a caring and gentle approach. Treats are a must if you come to us.',
-    staff: [
-      {
-        name: 'Dr Natasha Taylor',
-        role: 'Owner, Doctor of Veterinary Medicine',
-        photo: '/images/civic/natasha.jpg',
-        bio: 'Natasha has cared for wildlife and small animals since 1993 and took over Civic Centre Veterinary Surgery in 2010.',
-      },
-      {
-        name: 'Trinity',
-        role: 'Senior Veterinary Nurse',
-        bio: 'Trinity is a senior veterinary nurse at Civic Centre Veterinary Surgery.',
-      },
-      {
-        name: 'Toby',
-        role: 'Veterinary Nurse',
-        bio: 'Toby is part of the veterinary nursing team at Civic Centre.',
-        photo: '/images/civic/toby.jpg',
-      },
-    ],
   },
 ]
 

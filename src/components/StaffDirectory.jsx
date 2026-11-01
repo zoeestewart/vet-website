@@ -4,8 +4,11 @@ import { parseStaffCsv } from '../data/staff.js'
 import { staffCsvUrl } from '../lib/staffCsvUrl.js'
 
 export default function StaffDirectory() {
-  const [staff, setStaff] = useState(currentClinic.staff)
-  const [loadError, setLoadError] = useState('')
+  const [staff, setStaff] = useState([])
+  const [isLoading, setIsLoading] = useState(Boolean(staffCsvUrl))
+  const [loadError, setLoadError] = useState(
+    staffCsvUrl ? '' : 'The staff spreadsheet URL has not been configured.',
+  )
 
   useEffect(() => {
     if (!staffCsvUrl) return undefined
@@ -31,11 +34,13 @@ export default function StaffDirectory() {
         setStaff(csvStaff)
         setLoadError('')
       } catch (error) {
-        if (error.name === 'AbortError') return
+        if (error instanceof Error && error.name === 'AbortError') return
 
         setLoadError(
-          `Live staff details could not be loaded. Showing the saved clinic details instead. ${error.message}`,
+          `Staff details could not be loaded from the spreadsheet. ${error instanceof Error ? error.message : 'An unexpected error occurred.'}`,
         )
+      } finally {
+        if (!controller.signal.aborted) setIsLoading(false)
       }
     }
 
@@ -45,6 +50,11 @@ export default function StaffDirectory() {
 
   return (
     <>
+      {isLoading && (
+        <p className="mt-5 text-sm text-[#6b655f]" role="status">
+          Loading team details from the Google Sheet…
+        </p>
+      )}
       {loadError && (
         <p
           className="mt-5 border-l-4 border-amber-600 bg-amber-50 px-4 py-3 text-sm text-amber-950"
@@ -53,7 +63,8 @@ export default function StaffDirectory() {
           {loadError}
         </p>
       )}
-      <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {!isLoading && staff.length > 0 && (
+        <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {staff.map((member) => (
           <article
             className="border border-[#e1d8cc] bg-white p-5"
@@ -89,7 +100,8 @@ export default function StaffDirectory() {
             )}
           </article>
         ))}
-      </div>
+        </div>
+      )}
     </>
   )
 }

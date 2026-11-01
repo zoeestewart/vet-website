@@ -116,25 +116,22 @@ References:
 
 ## Deploying to cPanel
 
-The GitHub Actions workflow builds the app and deploys `dist/` over FTP whenever
+The GitHub Actions workflow builds the app and deploys `dist/` over explicit
+FTPS on port 21 whenever
 you push to `main`. In this repository's GitHub settings, add these Actions
 secrets for the clinics' cPanel FTP account:
 
-- `FTP_HOST` — the cPanel FTP server hostname
-- `FTP_USERNAME` — the FTP account username
-- `FTP_PASSWORD` — the FTP account password
-- `FTP_SERVER_DIR_GRACEVILLE` — path to the Graceville site folder, with a
-  trailing slash. On the shared cPanel account this is the
-  `public_html/fivewaysvet.com.au` folder, e.g. `/public_html/fivewaysvet.com.au/`
-  (relative to the FTP account's home directory).
-- `FTP_SERVER_DIR_CIVIC` — likewise `/public_html/civiccentrevets.com.au/`.
+- `FTP_FIVE_PASSWORD` — the Graceville FTP account password
+- `FTP_PASSWORD` — the Civic Centre FTP account password
 
-Each push deploys the same build to both folders. Never point either path at
-`public_html/` itself: that folder also holds the Kommunity site and WordPress
-files. Check the paths against the FTP account's root (a restricted FTP account
-may need a path without the `/public_html` prefix). The first deploy uploads
-over any existing files in those folders, so back up the old WordPress sites
-first.
+The FTP usernames and server are configured in the workflow. Graceville's
+`server-dir` is `../`, because that FTP account starts in
+`public_html/fivewaysvet.com.au/git-login/`; this targets its parent site
+directory. Civic Centre's destination is currently
+`public_html/civiccentrevets.com.au/` relative to its FTP account's starting
+directory. Confirm that account's starting directory before deploying; FTP
+paths are relative to the account, not necessarily the cPanel home. Back up
+existing site files before the first deploy.
 
 Optional Actions variables can be used to configure separate booking links and
 the shared staff sheet:
@@ -144,6 +141,6 @@ the shared staff sheet:
 - `VITE_STAFF_CSV_URL`
 
 `VITE_BOOKING_URL` is also supported as a legacy booking link for Graceville.
-The deployment uses standard FTP on port 21, matching the Kommunity workflow.
+The deployment uses explicit FTPS on port 21, as supported by cPanel.
 The Apache rewrite rule in `public/.htaccess` keeps React Router pages working
 when visitors open or refresh a page directly.
