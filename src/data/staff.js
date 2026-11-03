@@ -35,6 +35,42 @@ function parseCsv(csv) {
   return rows
 }
 
+function matchesClinic(value, clinicId) {
+  const normalize = (text) => text.toLowerCase().replace(/[^a-z0-9]/g, '')
+  const clinicNames = {
+    'graceville-fiveways': [
+      'gracevillefiveways',
+      'gracevillefivewaysveterinary',
+      'both'
+    ],
+    'civic-centre': ['civiccentre', 'civiccentreveterinarysurgery', 'both'],
+  }
+  const acceptedNames = [clinicId, ...(clinicNames[clinicId] || [])].map(
+    normalize,
+  )
+
+  return acceptedNames.includes(normalize(value))
+}
+
+function getPhotoUrl(value) {
+  if (!value) return ''
+
+  const driveFileId = value.match(
+    /drive\.google\.com\/(?:file\/d\/|open\?.*?\bid=)([a-zA-Z0-9_-]+)/i,
+  )?.[1]
+
+  if (driveFileId) {
+    return `https://drive.google.com/uc?export=view&id=${driveFileId}`
+  }
+
+  try {
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : ''
+  } catch {
+    return ''
+  }
+}
+
 export function parseStaffCsv(csv, clinicId) {
   const rows = parseCsv(csv.replace(/^\uFEFF/, ''))
 
@@ -81,7 +117,7 @@ export function parseStaffCsv(csv, clinicId) {
       )
     }
 
-    if (clinic && clinic !== clinicId) {
+    if (clinic && !matchesClinic(clinic, clinicId)) {
       return []
     }
 
@@ -90,7 +126,7 @@ export function parseStaffCsv(csv, clinicId) {
         name,
         role,
         bio,
-        photo: photoColumn === -1 ? '' : fields[photoColumn]?.trim() || '',
+        photo: photoColumn === -1 ? '' : getPhotoUrl(fields[photoColumn]?.trim()),
       },
     ]
   })

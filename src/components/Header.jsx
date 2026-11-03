@@ -17,13 +17,19 @@ export default function Header() {
           onClick={closeMenu}
           to="/"
         >
-          <img
-            alt={`${currentClinic.name} — ${currentClinic.tagline}`}
-            className="h-auto w-28 sm:w-36"
-            height="678"
-            src={currentClinic.logo}
-            width="1302"
-          />
+          {currentClinic.logo ? (
+            <img
+              alt={currentClinic.name}
+              className="h-auto w-28 sm:w-36"
+              height="678"
+              src={currentClinic.logo}
+              width="1302"
+            />
+          ) : (
+            <span className="font-serif text-lg font-bold text-[#383431]">
+              {currentClinic.shortName}
+            </span>
+          )}
         </Link>
 
         <div className="flex items-center gap-2 md:hidden">

@@ -12,7 +12,10 @@ export default function Layout() {
     document.title = currentClinic.name
     document
       .querySelector('meta[name="description"]')
-      ?.setAttribute('content', `${currentClinic.name} — ${currentClinic.tagline}`)
+      ?.setAttribute(
+        'content',
+        `${currentClinic.name} provides personal and affordable veterinary care.`,
+      )
   }, [])
 
   useEffect(() => {

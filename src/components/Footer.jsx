@@ -7,8 +7,7 @@ export default function Footer() {
         <div>
           <p className="text-lg font-bold text-white">{currentClinic.name}</p>
           <p className="mt-2 max-w-sm text-sm leading-6 text-white/70">
-            {currentClinic.tagline} Caring for pets and their people in our
-            local community.
+            Caring for pets and their people in our local community.
           </p>
         </div>
         <div>
