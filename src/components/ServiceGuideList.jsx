@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { glossaryEntries } from '../data/glossary.js'
-import { serviceGuides } from '../data/serviceGuides.js'
+import useSheetData from '../hooks/useSheetData.js'
 
 export default function ServiceGuideList() {
   const [query, setQuery] = useState('')
+  const { glossaryEntries, serviceGuides } = useSheetData()
   const filteredGuides = useMemo(() => {
     const searchTerm = query.trim().toLowerCase()
     const categoryGuides = serviceGuides
@@ -20,7 +20,10 @@ export default function ServiceGuideList() {
         ...(guide.items || []),
         guide.closing,
         ...(guide.slug === 'glossary'
-          ? glossaryEntries.flatMap(({ term, definition }) => [term, definition])
+          ? glossaryEntries.flatMap(({ term, definition }) => [
+              term,
+              definition,
+            ])
           : []),
       ]
         .filter(Boolean)
@@ -28,7 +31,7 @@ export default function ServiceGuideList() {
         .toLowerCase()
         .includes(searchTerm),
     )
-  }, [query])
+  }, [glossaryEntries, query, serviceGuides])
 
   return (
     <section className="mt-10">

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { serviceGuides } from '../data/serviceGuides.js'
+import useSheetData from '../hooks/useSheetData.js'
 
 export default function GuideOverviewList({ category }) {
+  const { serviceGuides } = useSheetData()
   const guides = serviceGuides.filter((guide) => guide.category === category)
 
   return (

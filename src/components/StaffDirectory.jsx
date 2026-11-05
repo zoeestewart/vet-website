@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react'
-import { currentClinic } from '../data/clinics.js'
-import { parseStaffCsv } from '../data/staff.js'
-import { staffCsvUrl } from '../lib/staffCsvUrl.js'
+import { useState } from 'react'
+import useSheetData from '../hooks/useSheetData.js'
 
 function StaffCard({ member }) {
   const [photoFailed, setPhotoFailed] = useState(false)
@@ -40,66 +38,19 @@ function StaffCard({ member }) {
 }
 
 export default function StaffDirectory() {
-  const [staff, setStaff] = useState([])
-  const [isLoading, setIsLoading] = useState(Boolean(staffCsvUrl))
-  const [loadError, setLoadError] = useState(
-    staffCsvUrl ? '' : 'The staff spreadsheet URL has not been configured.',
-  )
-
-  useEffect(() => {
-    if (!staffCsvUrl) return undefined
-
-    const controller = new AbortController()
-
-    async function loadStaff() {
-      try {
-        const response = await fetch(staffCsvUrl, { signal: controller.signal })
-
-        if (!response.ok) {
-          throw new Error(`Staff spreadsheet returned HTTP ${response.status}.`)
-        }
-
-        const csvStaff = parseStaffCsv(await response.text(), currentClinic.id)
-
-        if (csvStaff.length === 0) {
-          throw new Error(
-            `No staff rows were found for clinic "${currentClinic.id}".`,
-          )
-        }
-
-        setStaff(csvStaff)
-        setLoadError('')
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return
-
-        setLoadError(
-          `Staff details could not be loaded from the spreadsheet. ${error instanceof Error ? error.message : 'An unexpected error occurred.'}`,
-        )
-      } finally {
-        if (!controller.signal.aborted) setIsLoading(false)
-      }
-    }
-
-    loadStaff()
-    return () => controller.abort()
-  }, [])
+  const { staff, staffError } = useSheetData()
 
   return (
     <>
-      {isLoading && (
-        <p className="mt-5 text-sm text-[#6b655f]" role="status">
-          Loading team details
-        </p>
-      )}
-      {loadError && (
+      {staffError && (
         <p
           className="mt-5 border-l-4 border-amber-600 bg-amber-50 px-4 py-3 text-sm text-amber-950"
           role="status"
         >
-          {loadError}
+          {staffError}
         </p>
       )}
-      {!isLoading && staff.length > 0 && (
+      {staff.length > 0 && (
         <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {staff.map((member) => (
             <StaffCard

@@ -1,7 +1,9 @@
-import { currentClinic } from '../data/clinics.js'
+import useSheetData from '../hooks/useSheetData.js'
 import { primaryButton } from '../lib/styles.js'
 
 export default function PetAdvicePage() {
+  const { currentClinic } = useSheetData()
+
   return (
     <main className="mx-auto flex min-h-[55vh] max-w-5xl flex-col px-5 py-10 sm:px-8 sm:py-14">
       <header className="max-w-3xl">

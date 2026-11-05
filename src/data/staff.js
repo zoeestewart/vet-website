@@ -1,39 +1,4 @@
-function parseCsv(csv) {
-  const rows = []
-  let row = []
-  let field = ''
-  let quoted = false
-
-  for (let index = 0; index < csv.length; index += 1) {
-    const character = csv[index]
-
-    if (character === '"' && quoted && csv[index + 1] === '"') {
-      field += '"'
-      index += 1
-    } else if (character === '"') {
-      quoted = !quoted
-    } else if (character === ',' && !quoted) {
-      row.push(field.trim())
-      field = ''
-    } else if ((character === '\n' || character === '\r') && !quoted) {
-      row.push(field.trim())
-      if (row.some(Boolean)) rows.push(row)
-      row = []
-      field = ''
-      if (character === '\r' && csv[index + 1] === '\n') index += 1
-    } else {
-      field += character
-    }
-  }
-
-  if (quoted) {
-    throw new Error('The staff spreadsheet contains an unclosed quoted field.')
-  }
-
-  row.push(field.trim())
-  if (row.some(Boolean)) rows.push(row)
-  return rows
-}
+import { parseCsv } from '../lib/parseCsv.js'
 
 function matchesClinic(value, clinicId) {
   const normalize = (text) => text.toLowerCase().replace(/[^a-z0-9]/g, '')
@@ -60,7 +25,13 @@ function getPhotoUrl(value) {
   )?.[1]
 
   if (driveFileId) {
-    return `https://drive.google.com/uc?export=view&id=${driveFileId}`
+    return `https://lh3.googleusercontent.com/d/${driveFileId}=w1200`
+  }
+
+  // Plain paths such as "staff/natasha.jpg" refer to files in public/images.
+  if (!/^[a-z][a-z0-9+.-]*:/i.test(value)) {
+    const path = value.replace(/^\/+/, '').replace(/^images\//i, '')
+    return `${import.meta.env?.BASE_URL || '/'}images/${path}`
   }
 
   try {
@@ -72,7 +43,7 @@ function getPhotoUrl(value) {
 }
 
 export function parseStaffCsv(csv, clinicId) {
-  const rows = parseCsv(csv.replace(/^\uFEFF/, ''))
+  const rows = parseCsv(csv.replace(/^\uFEFF/, ''), 'The staff spreadsheet')
 
   if (rows.length < 2) {
     throw new Error('The staff spreadsheet does not contain any staff rows.')

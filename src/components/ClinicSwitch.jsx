@@ -1,6 +1,8 @@
-import { otherClinic } from '../data/clinics.js'
+import useSheetData from '../hooks/useSheetData.js'
 
 export default function ClinicSwitch({ onNavigate }) {
+  const { otherClinic } = useSheetData()
+
   return (
     <details className="group relative">
       <summary className="flex cursor-pointer list-none items-center gap-2 rounded-sm border border-[#383431]/25 px-3 py-2 text-xs font-bold uppercase tracking-wide text-[#383431] transition hover:border-[var(--clinic-accent)] hover:text-[var(--clinic-accent-text)] [&::-webkit-details-marker]:hidden">

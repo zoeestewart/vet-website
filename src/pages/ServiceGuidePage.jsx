@@ -2,12 +2,13 @@ import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import AppointmentLink from '../components/AppointmentLink.jsx'
 import GuideImageGallery from '../components/GuideImageGallery.jsx'
 import GlossaryTerms from '../components/GlossaryTerms.jsx'
-import { serviceGuides } from '../data/serviceGuides.js'
+import useSheetData from '../hooks/useSheetData.js'
 import { primaryButton, textLink } from '../lib/styles.js'
 
 export default function ServiceGuidePage() {
   const { slug, section } = useParams()
   const location = useLocation()
+  const { serviceGuides } = useSheetData()
   const guide = serviceGuides.find((item) => item.slug === slug)
   const fallbackPath =
     guide?.category === 'services'

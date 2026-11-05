@@ -1,10 +1,12 @@
 import { Link } from 'react-router-dom'
 import AppointmentLink from '../components/AppointmentLink.jsx'
 import HeroCarousel from '../components/HeroCarousel.jsx'
-import { currentClinic } from '../data/clinics.js'
+import useSheetData from '../hooks/useSheetData.js'
 import { primaryButton, secondaryButton, textLink } from '../lib/styles.js'
 
 export default function HomePage() {
+  const { currentClinic } = useSheetData()
+
   return (
     <>
       <section className="bg-[var(--clinic-accent-pale)]">

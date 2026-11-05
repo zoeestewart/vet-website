@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { glossaryEntries } from '../data/glossary.js'
+import useSheetData from '../hooks/useSheetData.js'
 
 export default function GlossaryTerms() {
   const [query, setQuery] = useState('')
+  const { glossaryEntries } = useSheetData()
   const filteredEntries = useMemo(() => {
     const searchTerm = query.trim().toLowerCase()
     if (!searchTerm) return glossaryEntries
@@ -10,7 +11,7 @@ export default function GlossaryTerms() {
     return glossaryEntries.filter(({ term, definition }) =>
       `${term} ${definition}`.toLowerCase().includes(searchTerm),
     )
-  }, [query])
+  }, [glossaryEntries, query])
 
   return (
     <section className="mt-8">

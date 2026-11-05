@@ -1,60 +1,131 @@
-export const clinics = [
-  {
-    id: 'graceville-fiveways',
-    name: 'Graceville Fiveways Veterinary',
-    shortName: 'Graceville Fiveways',
-    hostnames: ['fivewaysvet.com.au'],
-    websiteUrl: 'https://fivewaysvet.com.au/',
-    logo: '/images/clinic-logo.jpg',
-    email: 'info@fivewaysvet.com.au',
-    phone: '+61733799336',
-    phoneDisplay: '(07) 3379 9336',
-    address: '316 Oxley Rd, Graceville QLD 4075',
-    directionsUrl:
-      'https://maps.google.com/?q=Graceville+Fiveways+Veterinary+Surgery,+316+Oxley+Rd,+Graceville+QLD+4075',
-    accent: '#bbdc56',
-    accentHover: '#a8c941',
-    accentText: '#647c19',
-    accentPale: '#f2f7e3',
-  },
-  {
-    id: 'civic-centre',
-    name: 'Civic Centre Veterinary Surgery',
-    shortName: 'Civic Centre',
-    hostnames: ['civiccentrevets.com.au'],
-    websiteUrl: 'https://www.civiccentrevets.com.au/',
-    email: 'info@civiccentrevets.com.au',
-    phone: '+61733727699',
-    phoneDisplay: '(07) 3372 7699',
-    address: 'Shop 11, Civic Centre Shopping Centre, Corsair Ave, Inala QLD 4077',
-    directionsUrl:
-      'https://maps.google.com/?q=Civic+Centre+Veterinary+Surgery,+Shop+11,+Civic+Centre+Shopping+Centre,+Corsair+Ave,+Inala+QLD+4077',
-    accent: '#e77826',
-    accentHover: '#c95d18',
-    accentText: '#984214',
-    accentPale: '#fff1e7',
-  },
-]
+import { parseCsv } from '../lib/parseCsv.js'
+import { toCsvUrl } from '../lib/staffCsvUrl.js'
 
-function getClinicForHostname(hostname) {
-  const normalizedHostname = hostname.toLowerCase().replace(/^www\./, '')
-  return clinics.find((clinic) => clinic.hostnames.includes(normalizedHostname))
+const DEFAULT_CLINICS_SHEET_URL =
+  'https://docs.google.com/spreadsheets/d/1L36cTtpATdld5vNmuaKZjDCXdioh3MDNp4Y2IxYciUQ/edit?gid=1976278631'
+
+export const clinicsCsvUrl = toCsvUrl(
+  import.meta.env?.VITE_CLINICS_CSV_URL?.trim() || DEFAULT_CLINICS_SHEET_URL,
+)
+
+function getSocialUrl(value, column, rowNumber) {
+  const trimmed = (value || '').trim()
+  if (!trimmed) return ''
+
+  try {
+    const url = new URL(trimmed)
+    if (['http:', 'https:'].includes(url.protocol)) return url.href
+  } catch {
+    // Falls through to the error below.
+  }
+
+  throw new Error(
+    `Clinics spreadsheet row ${rowNumber} has an invalid ${column} link.`,
+  )
 }
 
-const hostnameClinic =
-  typeof window === 'undefined'
-    ? undefined
-    : getClinicForHostname(window.location.hostname)
-const developmentClinic =
-  typeof window === 'undefined'
-    ? undefined
-    : new URLSearchParams(window.location.search).get('clinic')
+export function parseClinicsCsv(csv) {
+  const rows = parseCsv(csv.replace(/^\uFEFF/, ''), 'The clinics spreadsheet')
 
-export const currentClinic =
-  clinics.find((clinic) => clinic.id === developmentClinic) ||
-  hostnameClinic ||
-  clinics[0]
+  if (rows.length < 2) {
+    throw new Error('The clinics spreadsheet does not contain any clinics.')
+  }
 
-export const otherClinic = clinics.find(
-  (clinic) => clinic.id !== currentClinic.id,
-)
+  const headers = rows[0].map((header) => header.toLowerCase())
+  const records = rows.slice(1).map((fields) =>
+    Object.fromEntries(headers.map((header, index) => [header, fields[index] || ''])),
+  )
+  const requiredColumns = [
+    'id',
+    'name',
+    'shortname',
+    'hostnames',
+    'email',
+    'phone',
+    'phonedisplay',
+    'address',
+    'accent',
+    'accenthover',
+    'accenttext',
+    'accentpale',
+  ]
+
+  for (const column of requiredColumns) {
+    if (!headers.includes(column)) {
+      throw new Error(
+        `The clinics spreadsheet needs a ${column} column.`,
+      )
+    }
+  }
+
+  const clinics = records.map((record, index) => {
+    const requiredValues = [
+      record.id,
+      record.name,
+      record.shortname,
+      record.email,
+      record.phone,
+      record.phonedisplay,
+      record.address,
+    ]
+
+    if (requiredValues.some((value) => !value.trim())) {
+      throw new Error(
+        `Clinics spreadsheet row ${index + 2} is missing required details.`,
+      )
+    }
+
+    const hostnames = record.hostnames
+      .split(/[,\n|]/)
+      .map((hostname) => hostname.trim().toLowerCase().replace(/^www\./, ''))
+      .filter(Boolean)
+
+    if (hostnames.length === 0) {
+      throw new Error(
+        `Clinics spreadsheet row ${index + 2} needs at least one hostname.`,
+      )
+    }
+
+    return {
+      id: record.id.trim(),
+      name: record.name.trim(),
+      shortName: record.shortname.trim(),
+      hostnames,
+      websiteUrl: record.websiteurl.trim(),
+      logo: record.logo.trim(),
+      aboutImage: record.aboutimage.trim(),
+      email: record.email.trim(),
+      phone: record.phone.trim(),
+      phoneDisplay: record.phonedisplay.trim(),
+      address: record.address.trim(),
+      directionsUrl: record.directionsurl.trim(),
+      facebookUrl: getSocialUrl(record.facebookurl, 'FacebookUrl', index + 2),
+      instagramUrl: getSocialUrl(record.instagramurl, 'InstagramUrl', index + 2),
+      accent: record.accent.trim(),
+      accentHover: record.accenthover.trim(),
+      accentText: record.accenttext.trim(),
+      accentPale: record.accentpale.trim(),
+    }
+  })
+
+  if (clinics.length < 2) {
+    throw new Error('The clinics spreadsheet must contain both clinics.')
+  }
+
+  if (new Set(clinics.map(({ id }) => id)).size !== clinics.length) {
+    throw new Error('The clinics spreadsheet contains duplicate clinic IDs.')
+  }
+
+  return clinics
+}
+
+export function getCurrentClinic(clinics, hostname, search) {
+  const developmentClinic = new URLSearchParams(search).get('clinic')
+  const normalizedHostname = hostname.toLowerCase().replace(/^www\./, '')
+
+  return (
+    clinics.find((clinic) => clinic.id === developmentClinic) ||
+    clinics.find((clinic) => clinic.hostnames.includes(normalizedHostname)) ||
+    clinics[0]
+  )
+}

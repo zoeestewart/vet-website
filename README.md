@@ -30,10 +30,21 @@ npm run dev
 
 The former `/cat-care` and `/dog-care` URLs redirect to `/pet-advice`.
 
-Clinic details, the orange Civic Centre theme, and fallback staff listings are
-maintained in `src/data/clinics.js`. Clinic-owned logo assets are in
-`public/images/`, with per-clinic photos in `public/images/graceville/` and
-`public/images/civic/`.
+Clinic details, service guides and glossary entries load from their public
+Google Sheets tabs. Sheet columns are parsed by `src/data/clinics.js`,
+`src/data/serviceGuides.js`, and `src/data/glossary.js`. Clinic and guide images
+are hosted in the shared Google Drive photo folders and referenced by their
+direct image URLs. Drive image files must allow anyone with the link to view
+them for the public website to load them.
+
+All tabs, including staff, are fetched once when the site loads and shared
+through `SheetDataProvider`. The clinics tab also has optional `FacebookUrl` and
+`InstagramUrl` columns; a clinic's social icons appear in the top bar and footer
+only when those cells are filled in.
+
+The staff tab's `Photo` column accepts a Google Drive share link, a full image
+URL, or a path such as `staff/natasha.jpg`, which loads
+`public/images/staff/natasha.jpg`.
 
 ## Project structure
 
@@ -42,8 +53,8 @@ src/
   App.jsx          route table (nested under Layout)
   components/      Layout, Header, Footer, ClinicSwitch, StaffDirectory, ...
   pages/           one file per route (Home, About, Services, Team, Contact, ...)
-  data/            clinics.js, navigation.js, staff.js (CSV parser)
-  lib/             shared helpers (button styles, staff sheet URL)
+  data/            sheet parsers, navigation.js, staff.js
+  lib/             shared helpers (button styles, CSV parser, sheet URLs)
 ```
 
 The two clinic domains in the site configuration are
@@ -128,14 +139,18 @@ paths are relative to its `public_html/` starting directory:
 `fivewaysvet.com.au/` and `civiccentrevets.com.au/`. Confirm that the account
 has access to both folders. Back up existing site files before the first deploy.
 
-Optional Actions variables can be used to configure separate booking links and
-the shared staff sheet:
+Optional Actions variables can configure booking links and the Google Sheets
+tabs:
 
 - `VITE_BOOKING_URL_GRACEVILLE`
 - `VITE_BOOKING_URL_CIVIC`
 - `VITE_STAFF_CSV_URL`
+- `VITE_CLINICS_CSV_URL`
+- `VITE_GUIDES_CSV_URL`
+- `VITE_GLOSSARY_CSV_URL`
 
 `VITE_BOOKING_URL` is also supported as a legacy booking link for Graceville.
+Clinic, guide, and glossary sheet URLs already have defaults configured.
 The deployment uses explicit FTPS on port 21, as supported by cPanel.
 The Apache rewrite rule in `public/.htaccess` keeps React Router pages working
 when visitors open or refresh a page directly.

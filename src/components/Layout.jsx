@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { currentClinic } from '../data/clinics.js'
+import useSheetData from '../hooks/useSheetData.js'
 import Footer from './Footer.jsx'
 import Header from './Header.jsx'
 import TopBar from './TopBar.jsx'
 
 export default function Layout() {
   const { pathname } = useLocation()
+  const { currentClinic } = useSheetData()
 
   useEffect(() => {
     document.title = currentClinic.name
@@ -16,7 +17,7 @@ export default function Layout() {
         'content',
         `${currentClinic.name} provides personal and affordable veterinary care.`,
       )
-  }, [])
+  }, [currentClinic.name])
 
   useEffect(() => {
     window.scrollTo(0, 0)

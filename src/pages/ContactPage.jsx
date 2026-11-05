@@ -1,7 +1,8 @@
-import { currentClinic } from '../data/clinics.js'
+import useSheetData from '../hooks/useSheetData.js'
 import { primaryButton, textLink } from '../lib/styles.js'
 
 export default function ContactPage() {
+  const { currentClinic } = useSheetData()
   const mapUrl = `https://maps.google.com/maps?t=m&output=embed&iwloc=near&z=15&q=${encodeURIComponent(`${currentClinic.name}, ${currentClinic.address}`)}`
 
   function handleSubmit(event) {

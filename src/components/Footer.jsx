@@ -1,6 +1,9 @@
-import { currentClinic } from '../data/clinics.js'
+import useSheetData from '../hooks/useSheetData.js'
+import SocialLinks from './SocialLinks.jsx'
 
 export default function Footer() {
+  const { currentClinic } = useSheetData()
+
   return (
     <footer className="bg-[#383431] text-white">
       <div className="mx-auto grid max-w-7xl gap-7 px-5 py-9 sm:px-8 md:grid-cols-3">
@@ -36,6 +39,7 @@ export default function Footer() {
           >
             {currentClinic.phoneDisplay}
           </a>
+          <SocialLinks className="mt-4 text-white/80" />
           <p className="mt-4 text-xs text-white/50">© {currentClinic.name}</p>
         </div>
       </div>

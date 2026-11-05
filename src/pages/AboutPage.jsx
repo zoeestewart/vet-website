@@ -1,8 +1,9 @@
-import { currentClinic } from '../data/clinics.js'
-
-const isCivicCentre = currentClinic.id === 'civic-centre'
+import useSheetData from '../hooks/useSheetData.js'
 
 export default function AboutPage() {
+  const { currentClinic } = useSheetData()
+  const isCivicCentre = currentClinic.id === 'civic-centre'
+
   return (
     <article className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
       <header className="grid items-center gap-8 md:grid-cols-[1.1fr_.9fr]">
@@ -27,11 +28,7 @@ export default function AboutPage() {
               : 'Veterinary nurse holding a cat'
           }
           className="max-h-96 w-full rounded-sm object-cover"
-          src={
-            isCivicCentre
-              ? '/images/carousel/carousel4.jpg'
-              : '/images/graceville/graceville-clinic.png'
-          }
+          src={currentClinic.aboutImage}
         />
       </header>
 

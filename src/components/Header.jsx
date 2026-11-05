@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import { currentClinic } from '../data/clinics.js'
+import useSheetData from '../hooks/useSheetData.js'
 import { navigation } from '../data/navigation.js'
 import ClinicSwitch from './ClinicSwitch.jsx'
 
 export default function Header() {
+  const { currentClinic } = useSheetData()
   const [menuOpen, setMenuOpen] = useState(false)
   const closeMenu = () => setMenuOpen(false)
 

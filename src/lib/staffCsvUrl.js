@@ -15,5 +15,5 @@ export function toCsvUrl(configuredUrl) {
 }
 
 export const staffCsvUrl = toCsvUrl(
-  import.meta.env.VITE_STAFF_CSV_URL?.trim() || DEFAULT_STAFF_SHEET_URL,
+  import.meta.env?.VITE_STAFF_CSV_URL?.trim() || DEFAULT_STAFF_SHEET_URL,
 )
