@@ -9,17 +9,17 @@ function StaffCard({ member }) {
       {member.photo && !photoFailed ? (
         <img
           alt=""
-          className="mb-4 size-16 rounded-full object-cover"
-          height="64"
+          className="-mx-5 -mt-5 mb-5 block aspect-[4/3] w-[calc(100%+2.5rem)] max-w-none object-cover object-top"
+          height="900"
           loading="lazy"
           onError={() => setPhotoFailed(true)}
           src={member.photo}
-          width="64"
+          width="1200"
         />
       ) : (
         <div
           aria-hidden="true"
-          className="mb-4 grid size-16 place-items-center rounded-full bg-[var(--clinic-accent-pale)] font-serif text-2xl font-bold text-[var(--clinic-accent-text)]"
+          className="-mx-5 -mt-5 mb-5 grid aspect-[4/3] w-[calc(100%+2.5rem)] place-items-center bg-[var(--clinic-accent-pale)] font-serif text-6xl font-bold text-[var(--clinic-accent-text)]"
         >
           {member.name.charAt(0)}
         </div>
