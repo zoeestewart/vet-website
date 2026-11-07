@@ -38,6 +38,7 @@ jobs:
         with:
           server: 103.254.137.129
           username: civic-logi@civiccentrevets.com.au
+          log-level: verbose
           password: iVSg#uxft&T$
           port: 21
           protocol: ftps
