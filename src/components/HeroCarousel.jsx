@@ -1,26 +1,57 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import {
+  fallbackHeroPhotos,
+  isHeroFolderConfigured,
+  loadHeroPhotos,
+} from '../data/heroPhotos.js'
 
-const slides = [
-  {
-    src: 'https://lh3.googleusercontent.com/pw/AP1GczPVm_HqyTyvc1dhmGzmUm8tNw0G0kKJH90mZMWfsvEnd5f0s0jrjy5Ob1gVOKi6AqMVY6lEwTo52_lepRCy-53tqH99biPy2mW9-C7s-d8W0sHXK3gB=w1600-h1200-no',
-    alt: 'A close-up of a dog',
-  },
-  {
-    src: 'https://lh3.googleusercontent.com/pw/AP1GczP85QKES-SuINAznUSilE6TEVrwyEHrYPo9dVC0-d9sLFclTrVbpjd_AWG0JUqlLeqHp-MDf05pcnD69NVQHARr6pMHl8S-tCfJ3im2o-HO-gQG5A7r=w1600-h1200-no',
-    alt: 'A close-up of a black cat',
-  },
-  {
-    src: 'https://lh3.googleusercontent.com/pw/AP1GczM2PqoJyubHuHLmY77XC4MbRkHi6E4NNa650VSNvbY2KkRb63BRW_5GeDgsUUlIzIdYZH4ci3-KZ22B-GqRslkZNsFbx73tDH-n-WN-2DPoHnyZXnw-=w1600-h1200-no',
-    alt: 'Three cats',
-  },
-  {
-    src: 'https://lh3.googleusercontent.com/pw/AP1GczPlmNEhiMyZoR3kSzbWE4s_PykzoWW8uWhIYjym2MIOLUUS_P7d74pi-H8Fal4d5-oIRi2xZ_RzGJe5VD8zOADTUvpxXW7ydo-XAMOsXVhrrUSoHrfr=w1600-h1200-no',
-    alt: 'A family with their pets',
-  },
-]
+const CACHE_KEY = 'vet-hero-photos-v1'
+
+function readCachedPhotos() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY))
+    return Array.isArray(cached) && cached.length ? cached : null
+  } catch {
+    return null
+  }
+}
+
+// Shows the last loaded folder contents straight away, then refreshes them.
+function useHeroPhotos() {
+  const [photos, setPhotos] = useState(
+    () => (isHeroFolderConfigured && readCachedPhotos()) || fallbackHeroPhotos,
+  )
+
+  useEffect(() => {
+    if (!isHeroFolderConfigured) return undefined
+
+    const controller = new AbortController()
+    loadHeroPhotos(controller.signal)
+      .then((freshPhotos) => {
+        // An empty folder keeps the current photos rather than an empty carousel.
+        if (freshPhotos.length === 0) return
+        setPhotos(freshPhotos)
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(freshPhotos))
+        } catch {
+          // Storage can be full or blocked; the carousel works without it.
+        }
+      })
+      .catch((error) => {
+        if (error instanceof Error && error.name === 'AbortError') return
+        console.warn(error)
+      })
+    return () => controller.abort()
+  }, [])
+
+  return photos
+}
 
 export default function HeroCarousel() {
-  const [activeIndex, setActiveIndex] = useState(0)
+  const slides = useHeroPhotos()
+  const [selectedIndex, setActiveIndex] = useState(0)
+  // Stays in range if the folder ends up with fewer photos than before.
+  const activeIndex = selectedIndex % slides.length
 
   const showSlide = (index) => {
     setActiveIndex((index + slides.length) % slides.length)

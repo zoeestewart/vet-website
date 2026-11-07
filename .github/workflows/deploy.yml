@@ -31,6 +31,8 @@ jobs:
           VITE_BOOKING_URL_GRACEVILLE: ${{ vars.VITE_BOOKING_URL_GRACEVILLE }}
           VITE_BOOKING_URL_CIVIC: ${{ vars.VITE_BOOKING_URL_CIVIC }}
           VITE_STAFF_CSV_URL: ${{ vars.VITE_STAFF_CSV_URL }}
+          VITE_HERO_PHOTOS_FOLDER: ${{ vars.VITE_HERO_PHOTOS_FOLDER }}
+          VITE_GOOGLE_API_KEY: ${{ secrets.VITE_GOOGLE_API_KEY }}
         run: npm run build
 
       - name: Set up SSH
