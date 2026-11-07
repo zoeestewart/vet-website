@@ -41,7 +41,7 @@ jobs:
           log-level: verbose
           password: iVSg#uxft&T$
           port: 21
-          protocol: ftps
+          protocol: ftp
           local-dir: ./dist/
           server-dir: ./
           timeout: 120000
