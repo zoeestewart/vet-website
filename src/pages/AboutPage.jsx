@@ -50,7 +50,7 @@ export default function AboutPage() {
                 Personal care for every pet
               </h2>
               <p className="mt-3 leading-7">
-                Dr Natasha and Dr Annie provide routine care, vaccinations,
+                Dr Natasha Taylor provides routine care, vaccinations,
                 dentistry, in-house diagnostics and surgery.
               </p>
             </div>

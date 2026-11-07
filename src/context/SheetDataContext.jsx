@@ -10,6 +10,28 @@ import { parseStaffCsv } from '../data/staff.js'
 import { staffCsvUrl } from '../lib/staffCsvUrl.js'
 import { SheetDataContext } from './sheetDataContext.js'
 
+// The last successful load is kept in the browser so repeat visits render
+// straight away while fresh data is fetched in the background. Bump the
+// version if the shape of the parsed data changes.
+const CACHE_KEY = 'vet-sheet-data-v1'
+
+function readCachedData() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY))
+    return cached?.clinics?.length ? cached : null
+  } catch {
+    return null
+  }
+}
+
+function writeCachedData(data) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+  } catch {
+    // Storage can be full or blocked (private mode); the site works without it.
+  }
+}
+
 async function loadSheet(url, name, signal, parse) {
   const response = await fetch(url, { signal })
   if (!response.ok) {
@@ -22,18 +44,24 @@ async function loadSheet(url, name, signal, parse) {
 function loadStaffSheet(signal) {
   if (!staffCsvUrl) {
     return Promise.resolve({
-      error: new Error('The staff spreadsheet URL has not been configured.'),
+      error: 'The staff spreadsheet URL has not been configured.',
     })
   }
 
+  // Errors are kept as plain messages so the result can be cached as JSON.
   return loadSheet(staffCsvUrl, 'Staff', signal, (csv) => ({ csv })).catch(
-    (error) => ({ error }),
+    (error) => {
+      if (error instanceof Error && error.name === 'AbortError') throw error
+      return {
+        error: error instanceof Error ? error.message : 'An unexpected error occurred.',
+      }
+    },
   )
 }
 
 function getClinicStaff(staffSheet, clinicId) {
   try {
-    if (staffSheet.error) throw staffSheet.error
+    if (staffSheet.error) throw new Error(staffSheet.error)
 
     const staff = parseStaffCsv(staffSheet.csv, clinicId)
     if (staff.length === 0) {
@@ -49,8 +77,30 @@ function getClinicStaff(staffSheet, clinicId) {
   }
 }
 
+// Only appears if loading takes a moment, so fast loads don't flash a spinner.
+function LoadingSpinner() {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 400)
+    return () => clearTimeout(timer)
+  }, [])
+
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center" role="status">
+      <span className="sr-only">Loading</span>
+      {visible && (
+        <span
+          aria-hidden="true"
+          className="h-8 w-8 animate-spin rounded-full border-2 border-[#e5ded6] border-t-[var(--clinic-accent,#e77826)]"
+        />
+      )}
+    </div>
+  )
+}
+
 export function SheetDataProvider({ children }) {
-  const [data, setData] = useState(null)
+  const [data, setData] = useState(readCachedData)
   const [loadError, setLoadError] = useState('')
   const [attempt, setAttempt] = useState(0)
 
@@ -73,7 +123,9 @@ export function SheetDataProvider({ children }) {
           ])
         if (controller.signal.aborted) return
 
-        setData({ clinics, serviceGuides, glossaryEntries, staffSheet })
+        const freshData = { clinics, serviceGuides, glossaryEntries, staffSheet }
+        setData(freshData)
+        writeCachedData(freshData)
         setLoadError('')
       } catch (error) {
         if (error instanceof Error && error.name === 'AbortError') return
@@ -107,7 +159,9 @@ export function SheetDataProvider({ children }) {
     }
   }, [data])
 
-  if (loadError) {
+  // A failed background refresh keeps showing the cached data; the error page
+  // is only for visitors with nothing to show yet.
+  if (loadError && !value) {
     return (
       <main className="mx-auto max-w-3xl px-5 py-12">
         <p
@@ -131,13 +185,8 @@ export function SheetDataProvider({ children }) {
     )
   }
 
-  if (!value) {
-    return (
-      <p className="px-5 py-12 text-center text-[#6b655f]" role="status">
-        Loading clinic and guide information
-      </p>
-    )
-  }
+  if (!value) return <LoadingSpinner />
+
 
   return (
     <SheetDataContext.Provider value={value}>
