@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   clinicsCsvUrl,
   getCurrentClinic,
@@ -10,26 +10,33 @@ import { parseStaffCsv } from '../data/staff.js'
 import { staffCsvUrl } from '../lib/staffCsvUrl.js'
 import { SheetDataContext } from './sheetDataContext.js'
 
-// The last successful load is kept in the browser so repeat visits render
-// straight away while fresh data is fetched in the background. Bump the
-// version if the shape of the parsed data changes.
+// The last successful load of each sheet is kept in the browser so repeat
+// visits render straight away while fresh data is fetched in the background.
+// Bump the version if the shape of the parsed data changes.
 const CACHE_KEY = 'vet-sheet-data-v1'
 
 function readCachedData() {
   try {
     const cached = JSON.parse(localStorage.getItem(CACHE_KEY))
-    return cached?.clinics?.length ? cached : null
+    return cached && typeof cached === 'object' ? cached : {}
   } catch {
-    return null
+    return {}
   }
 }
 
-function writeCachedData(data) {
+let cachedData = readCachedData()
+
+function writeCachedSheet(key, value) {
+  cachedData = { ...cachedData, [key]: value }
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data))
+    localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData))
   } catch {
     // Storage can be full or blocked (private mode); the site works without it.
   }
+}
+
+function errorMessage(error) {
+  return error instanceof Error ? error.message : 'An unexpected error occurred.'
 }
 
 async function loadSheet(url, name, signal, parse) {
@@ -40,30 +47,56 @@ async function loadSheet(url, name, signal, parse) {
   return parse(await response.text())
 }
 
-// Staff problems only affect the team page, so they are kept rather than thrown.
-function loadStaffSheet(signal) {
-  if (!staffCsvUrl) {
-    return Promise.resolve({
-      error: 'The staff spreadsheet URL has not been configured.',
-    })
-  }
+// Staff rows are filtered per clinic later, so the raw CSV is what gets cached.
+const keepStaffCsv = (csv) => ({ csv })
 
-  // Errors are kept as plain messages so the result can be cached as JSON.
-  return loadSheet(staffCsvUrl, 'Staff', signal, (csv) => ({ csv })).catch(
-    (error) => {
-      if (error instanceof Error && error.name === 'AbortError') throw error
-      return {
-        error: error instanceof Error ? error.message : 'An unexpected error occurred.',
-      }
-    },
-  )
+// Loads one sheet independently of the others. `data` is null until the first
+// load (or cached copy) is available; a failed refresh keeps showing cached data.
+function useSheet(key, url, name, parse) {
+  const [data, setData] = useState(() => cachedData[key] ?? null)
+  const [error, setError] = useState('')
+  const [attempt, setAttempt] = useState(0)
+
+  useEffect(() => {
+    if (!url) return
+
+    const controller = new AbortController()
+    loadSheet(url, name, controller.signal, parse).then(
+      (freshData) => {
+        setData(freshData)
+        setError('')
+        writeCachedSheet(key, freshData)
+      },
+      (loadError) => {
+        if (loadError instanceof Error && loadError.name === 'AbortError') return
+        setError(errorMessage(loadError))
+      },
+    )
+    return () => controller.abort()
+  }, [key, url, name, parse, attempt])
+
+  const retry = useCallback(() => {
+    setError('')
+    setAttempt((previousAttempt) => previousAttempt + 1)
+  }, [])
+
+  return {
+    data,
+    error: url ? error : `The ${name.toLowerCase()} spreadsheet URL has not been configured.`,
+    retry,
+  }
 }
 
+// staff is null while loading, so the team page can show a placeholder.
 function getClinicStaff(staffSheet, clinicId) {
-  try {
-    if (staffSheet.error) throw new Error(staffSheet.error)
+  if (!staffSheet.data && !staffSheet.error) {
+    return { staff: null, staffError: '' }
+  }
 
-    const staff = parseStaffCsv(staffSheet.csv, clinicId)
+  try {
+    if (!staffSheet.data) throw new Error(staffSheet.error)
+
+    const staff = parseStaffCsv(staffSheet.data.csv, clinicId)
     if (staff.length === 0) {
       throw new Error(`No staff rows were found for clinic "${clinicId}".`)
     }
@@ -72,7 +105,7 @@ function getClinicStaff(staffSheet, clinicId) {
   } catch (error) {
     return {
       staff: [],
-      staffError: `Staff details could not be loaded from the spreadsheet. ${error instanceof Error ? error.message : 'An unexpected error occurred.'}`,
+      staffError: `Staff details could not be loaded from the spreadsheet. ${errorMessage(error)}`,
     }
   }
 }
@@ -100,83 +133,83 @@ function LoadingSpinner() {
 }
 
 export function SheetDataProvider({ children }) {
-  const [data, setData] = useState(readCachedData)
-  const [loadError, setLoadError] = useState('')
-  const [attempt, setAttempt] = useState(0)
+  // Only the clinics sheet holds up the page, since the header, footer and
+  // colours all depend on it. The other sheets fill in their own sections.
+  const clinics = useSheet('clinics', clinicsCsvUrl, 'Clinics', parseClinicsCsv)
+  const guides = useSheet('serviceGuides', guidesCsvUrl, 'Guides', parseGuidesCsv)
+  const glossary = useSheet(
+    'glossaryEntries',
+    glossaryCsvUrl,
+    'Glossary',
+    parseGlossaryCsv,
+  )
+  const staffSheet = useSheet('staffSheet', staffCsvUrl, 'Staff', keepStaffCsv)
 
-  useEffect(() => {
-    const controller = new AbortController()
+  const clinicList = clinics.data?.length ? clinics.data : null
 
-    async function loadData() {
-      try {
-        const [clinics, serviceGuides, glossaryEntries, staffSheet] =
-          await Promise.all([
-            loadSheet(clinicsCsvUrl, 'Clinics', controller.signal, parseClinicsCsv),
-            loadSheet(guidesCsvUrl, 'Guides', controller.signal, parseGuidesCsv),
-            loadSheet(
-              glossaryCsvUrl,
-              'Glossary',
-              controller.signal,
-              parseGlossaryCsv,
-            ),
-            loadStaffSheet(controller.signal),
-          ])
-        if (controller.signal.aborted) return
+  const currentClinic = useMemo(
+    () =>
+      clinicList &&
+      getCurrentClinic(clinicList, window.location.hostname, window.location.search),
+    [clinicList],
+  )
 
-        const freshData = { clinics, serviceGuides, glossaryEntries, staffSheet }
-        setData(freshData)
-        writeCachedData(freshData)
-        setLoadError('')
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return
-
-        setLoadError(
-          `Website information could not be loaded from Google Sheets. ${error instanceof Error ? error.message : 'An unexpected error occurred.'}`,
-        )
-      }
-    }
-
-    loadData()
-    return () => controller.abort()
-  }, [attempt])
+  const { data: staffData, error: staffLoadError, retry: retryStaff } = staffSheet
 
   const value = useMemo(() => {
-    if (!data) return null
-
-    const currentClinic = getCurrentClinic(
-      data.clinics,
-      window.location.hostname,
-      window.location.search,
-    )
-
-    const { staffSheet, ...sheets } = data
+    if (!currentClinic) return null
 
     return {
-      ...sheets,
-      ...getClinicStaff(staffSheet, currentClinic.id),
+      clinics: clinicList,
       currentClinic,
-      otherClinic: data.clinics.find((clinic) => clinic.id !== currentClinic.id),
+      otherClinic: clinicList.find((clinic) => clinic.id !== currentClinic.id),
+      serviceGuides: guides.data,
+      guidesError: guides.data
+        ? ''
+        : guides.error &&
+          `Guides could not be loaded from the spreadsheet. ${guides.error}`,
+      retryGuides: guides.retry,
+      glossaryEntries: glossary.data,
+      glossaryError: glossary.data
+        ? ''
+        : glossary.error &&
+          `Glossary terms could not be loaded from the spreadsheet. ${glossary.error}`,
+      retryGlossary: glossary.retry,
+      ...getClinicStaff(
+        { data: staffData, error: staffLoadError },
+        currentClinic.id,
+      ),
+      retryStaff,
     }
-  }, [data])
+  }, [
+    clinicList,
+    currentClinic,
+    guides.data,
+    guides.error,
+    guides.retry,
+    glossary.data,
+    glossary.error,
+    glossary.retry,
+    staffData,
+    staffLoadError,
+    retryStaff,
+  ])
 
   // A failed background refresh keeps showing the cached data; the error page
   // is only for visitors with nothing to show yet.
-  if (loadError && !value) {
+  if (!value && clinics.error) {
     return (
       <main className="mx-auto max-w-3xl px-5 py-12">
         <p
           className="border-l-4 border-amber-600 bg-amber-50 px-4 py-3 text-amber-950"
           role="alert"
         >
-          {loadError}
+          Website information could not be loaded from Google Sheets.{' '}
+          {clinics.error}
         </p>
         <button
           className="mt-4 rounded-sm bg-[var(--clinic-accent,#e77826)] px-4 py-2 font-semibold text-white"
-          onClick={() => {
-            setData(null)
-            setLoadError('')
-            setAttempt((previousAttempt) => previousAttempt + 1)
-          }}
+          onClick={clinics.retry}
           type="button"
         >
           Try again
@@ -186,7 +219,6 @@ export function SheetDataProvider({ children }) {
   }
 
   if (!value) return <LoadingSpinner />
-
 
   return (
     <SheetDataContext.Provider value={value}>

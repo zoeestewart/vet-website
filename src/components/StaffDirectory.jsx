@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import useSheetData from '../hooks/useSheetData.js'
+import { SectionError, SectionLoading, SkeletonBlock } from './SectionStatus.jsx'
 
 function StaffCard({ member }) {
   const [photoFailed, setPhotoFailed] = useState(false)
@@ -37,19 +38,34 @@ function StaffCard({ member }) {
   )
 }
 
+function StaffCardSkeleton() {
+  return (
+    <div className="border border-[#e1d8cc] bg-white p-5">
+      <SkeletonBlock className="-mx-5 -mt-5 mb-5 aspect-[4/3] w-[calc(100%+2.5rem)] rounded-none" />
+      <SkeletonBlock className="h-6 w-2/3" />
+      <SkeletonBlock className="mt-2 h-4 w-1/3" />
+    </div>
+  )
+}
+
 export default function StaffDirectory() {
-  const { staff, staffError } = useSheetData()
+  const { staff, staffError, retryStaff } = useSheetData()
+
+  if (!staff) {
+    return (
+      <SectionLoading label="Loading our team">
+        <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StaffCardSkeleton />
+          <StaffCardSkeleton />
+          <StaffCardSkeleton />
+        </div>
+      </SectionLoading>
+    )
+  }
 
   return (
     <>
-      {staffError && (
-        <p
-          className="mt-5 border-l-4 border-amber-600 bg-amber-50 px-4 py-3 text-sm text-amber-950"
-          role="status"
-        >
-          {staffError}
-        </p>
-      )}
+      {staffError && <SectionError message={staffError} onRetry={retryStaff} />}
       {staff.length > 0 && (
         <div className="mt-7 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {staff.map((member) => (

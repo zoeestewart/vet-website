@@ -1,15 +1,21 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useSheetData from '../hooks/useSheetData.js'
+import {
+  SectionError,
+  SectionLoading,
+  SkeletonBlock,
+} from './SectionStatus.jsx'
 
 export default function ServiceGuideList() {
   const [query, setQuery] = useState('')
-  const { glossaryEntries, serviceGuides } = useSheetData()
+  const { glossaryEntries, serviceGuides, guidesError, retryGuides } =
+    useSheetData()
   const filteredGuides = useMemo(() => {
     const searchTerm = query.trim().toLowerCase()
     const categoryGuides = serviceGuides
 
-    if (!searchTerm) return categoryGuides
+    if (!categoryGuides || !searchTerm) return categoryGuides
 
     return categoryGuides.filter((guide) =>
       [
@@ -20,7 +26,7 @@ export default function ServiceGuideList() {
         ...(guide.items || []),
         guide.closing,
         ...(guide.slug === 'glossary'
-          ? glossaryEntries.flatMap(({ term, definition }) => [
+          ? (glossaryEntries ?? []).flatMap(({ term, definition }) => [
               term,
               definition,
             ])
@@ -51,41 +57,62 @@ export default function ServiceGuideList() {
           value={query}
         />
       </label>
-      <p aria-live="polite" className="mt-3 text-sm text-[#6b655f]">
-        {filteredGuides.length} {filteredGuides.length === 1 ? 'guide' : 'guides'}
-        {query.trim() ? ' found' : ''}
-      </p>
-      {filteredGuides.length > 0 ? (
-        <ul className="mt-3 divide-y divide-[#e9e3da] border-y border-[#e9e3da]">
-          {filteredGuides.map((guide) => (
-            <li key={guide.slug}>
-              <Link
-                className="group flex items-center justify-between gap-4 py-4 transition hover:text-[var(--clinic-accent-text)]"
-                to={`/guides/${guide.slug}`}
-                state={{ from: '/guides' }}
-              >
-                <span>
-                  <span className="block font-serif text-lg font-bold text-[#383431] group-hover:text-[var(--clinic-accent-text)]">
-                    {guide.title}
-                  </span>
-                  <span className="mt-1 block text-sm leading-6 text-[#6b655f]">
-                    {guide.summary}
-                  </span>
-                </span>
-                <span
-                  aria-hidden="true"
-                  className="shrink-0 text-xl text-[var(--clinic-accent-text)]"
-                >
-                  →
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
+      {!filteredGuides ? (
+        guidesError ? (
+          <SectionError message={guidesError} onRetry={retryGuides} />
+        ) : (
+          <SectionLoading label="Loading guides">
+            <SkeletonBlock className="mt-3 h-4 w-20" />
+            <div className="mt-3 divide-y divide-[#e9e3da] border-y border-[#e9e3da]">
+              {[0, 1, 2, 3].map((row) => (
+                <div className="py-4" key={row}>
+                  <SkeletonBlock className="h-6 w-1/2" />
+                  <SkeletonBlock className="mt-2 h-4 w-5/6" />
+                </div>
+              ))}
+            </div>
+          </SectionLoading>
+        )
       ) : (
-        <p className="mt-4 border border-[#e1d8cc] bg-white px-5 py-4">
-          No guides match “{query}”. Try a different search term.
-        </p>
+        <>
+          <p aria-live="polite" className="mt-3 text-sm text-[#6b655f]">
+            {filteredGuides.length}{' '}
+            {filteredGuides.length === 1 ? 'guide' : 'guides'}
+            {query.trim() ? ' found' : ''}
+          </p>
+          {filteredGuides.length > 0 ? (
+            <ul className="mt-3 divide-y divide-[#e9e3da] border-y border-[#e9e3da]">
+              {filteredGuides.map((guide) => (
+                <li key={guide.slug}>
+                  <Link
+                    className="group flex items-center justify-between gap-4 py-4 transition hover:text-[var(--clinic-accent-text)]"
+                    to={`/guides/${guide.slug}`}
+                    state={{ from: '/guides' }}
+                  >
+                    <span>
+                      <span className="block font-serif text-lg font-bold text-[#383431] group-hover:text-[var(--clinic-accent-text)]">
+                        {guide.title}
+                      </span>
+                      <span className="mt-1 block text-sm leading-6 text-[#6b655f]">
+                        {guide.summary}
+                      </span>
+                    </span>
+                    <span
+                      aria-hidden="true"
+                      className="shrink-0 text-xl text-[var(--clinic-accent-text)]"
+                    >
+                      →
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-4 border border-[#e1d8cc] bg-white px-5 py-4">
+              No guides match “{query}”. Try a different search term.
+            </p>
+          )}
+        </>
       )}
     </section>
   )

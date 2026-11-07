@@ -1,17 +1,40 @@
 import { useMemo, useState } from 'react'
 import useSheetData from '../hooks/useSheetData.js'
+import { SectionError, SectionLoading, SkeletonBlock } from './SectionStatus.jsx'
 
 export default function GlossaryTerms() {
   const [query, setQuery] = useState('')
-  const { glossaryEntries } = useSheetData()
+  const { glossaryEntries, glossaryError, retryGlossary } = useSheetData()
   const filteredEntries = useMemo(() => {
     const searchTerm = query.trim().toLowerCase()
-    if (!searchTerm) return glossaryEntries
+    if (!glossaryEntries || !searchTerm) return glossaryEntries
 
     return glossaryEntries.filter(({ term, definition }) =>
       `${term} ${definition}`.toLowerCase().includes(searchTerm),
     )
   }, [glossaryEntries, query])
+
+  if (!filteredEntries) {
+    if (glossaryError) {
+      return <SectionError message={glossaryError} onRetry={retryGlossary} />
+    }
+
+    return (
+      <section className="mt-8">
+        <SectionLoading label="Loading glossary terms">
+          <SkeletonBlock className="h-16 w-full" />
+          <div className="mt-6 space-y-6">
+            {[0, 1, 2, 3].map((row) => (
+              <div key={row}>
+                <SkeletonBlock className="h-6 w-1/3" />
+                <SkeletonBlock className="mt-2 h-4 w-full" />
+              </div>
+            ))}
+          </div>
+        </SectionLoading>
+      </section>
+    )
+  }
 
   return (
     <section className="mt-8">

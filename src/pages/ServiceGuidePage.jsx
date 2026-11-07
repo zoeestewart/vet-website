@@ -2,14 +2,19 @@ import { Link, Navigate, useLocation, useParams } from 'react-router-dom'
 import AppointmentLink from '../components/AppointmentLink.jsx'
 import GuideImageGallery from '../components/GuideImageGallery.jsx'
 import GlossaryTerms from '../components/GlossaryTerms.jsx'
+import {
+  SectionError,
+  SectionLoading,
+  SkeletonBlock,
+} from '../components/SectionStatus.jsx'
 import useSheetData from '../hooks/useSheetData.js'
 import { primaryButton, textLink } from '../lib/styles.js'
 
 export default function ServiceGuidePage() {
   const { slug, section } = useParams()
   const location = useLocation()
-  const { serviceGuides } = useSheetData()
-  const guide = serviceGuides.find((item) => item.slug === slug)
+  const { serviceGuides, guidesError, retryGuides } = useSheetData()
+  const guide = serviceGuides?.find((item) => item.slug === slug)
   const fallbackPath =
     guide?.category === 'services'
       ? '/services'
@@ -27,6 +32,31 @@ export default function ServiceGuidePage() {
       : returnPath === '/pet-care'
         ? 'Pet care'
         : 'All guides'
+
+  if (!serviceGuides) {
+    return (
+      <article className="mx-auto max-w-4xl px-5 py-10 sm:px-8 sm:py-14">
+        <Link className={textLink} to={returnPath}>
+          {returnLabel}
+        </Link>
+        {guidesError ? (
+          <SectionError message={guidesError} onRetry={retryGuides} />
+        ) : (
+          <SectionLoading label="Loading guide">
+            <SkeletonBlock className="mt-6 h-6 w-40" />
+            <SkeletonBlock className="mt-3 h-12 w-3/4" />
+            <SkeletonBlock className="mt-5 h-5 w-full" />
+            <div className="mt-8 space-y-3">
+              {[0, 1, 2, 3, 4].map((row) => (
+                <SkeletonBlock className="h-4 w-full" key={row} />
+              ))}
+              <SkeletonBlock className="h-4 w-2/3" />
+            </div>
+          </SectionLoading>
+        )}
+      </article>
+    )
+  }
 
   if (!guide) return <Navigate replace to="/guides" />
   if (section !== 'guides') {
