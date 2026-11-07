@@ -33,35 +33,29 @@ jobs:
           VITE_STAFF_CSV_URL: ${{ vars.VITE_STAFF_CSV_URL }}
         run: npm run build
 
-      - name: Deploy Civic Centre to cPanel
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: 103.254.137.129
-          username: civic-logi@civiccentrevets.com.au
-          log-level: verbose
-          password: iVSg#uxft&T$
-          port: 21
-          protocol: ftp
-          local-dir: ./dist/
-          server-dir: ./
-          timeout: 120000
-          exclude: |
-            **/.git*
-            **/.git*/**
-            images/**
+      - name: Set up SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "103.254.137.129 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC/2Cyzck0b6ImNyWGoenYUlmKuP1d2Y/XlWztrNGYNM" >> ~/.ssh/known_hosts
+          printf 'Host cpanel\n  HostName 103.254.137.129\n  User kommunit\n  IdentityFile ~/.ssh/deploy_key\n  IdentitiesOnly yes\n' > ~/.ssh/config
 
-      - name: Deploy Graceville Fiveways to cPanel
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: 103.254.137.129
-          username: fiveways-git@fivewaysvet.com.au
-          password: .oUM+THsdW*o
-          port: 21
-          protocol: ftp
-          local-dir: ./dist/
-          server-dir: ./
-          timeout: 120000
-          exclude: |
-            **/.git*
-            **/.git*/**
-            images/**
+      # Uploads dist/ over the site folder (adds/overwrites only, so images/ and
+      # .well-known/ on the server are left alone), then removes old build files
+      # from assets/ that the new build no longer uses.
+      - name: Deploy Civic Centre
+        env:
+          TARGET: public_html/civiccentrevets.com.au
+        run: |
+          tar -C dist -czf - . | ssh cpanel "tar -C $TARGET --no-overwrite-dir -xzf -"
+          ls dist/assets | ssh cpanel "k=\$(mktemp) && cat > \$k && cd $TARGET/assets && ls -A | grep -vxF -f \$k | xargs -r rm -f --; rm -f \$k"
+
+      - name: Deploy Graceville Fiveways
+        env:
+          TARGET: public_html/fivewaysvet.com.au
+        run: |
+          tar -C dist -czf - . | ssh cpanel "tar -C $TARGET --no-overwrite-dir -xzf -"
+          ls dist/assets | ssh cpanel "k=\$(mktemp) && cat > \$k && cd $TARGET/assets && ls -A | grep -vxF -f \$k | xargs -r rm -f --; rm -f \$k"
