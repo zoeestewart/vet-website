@@ -8,11 +8,8 @@ export default function AboutPage() {
     <article className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14">
       <header className="grid items-center gap-8 md:grid-cols-[1.1fr_.9fr]">
         <div>
-          <p className="font-serif text-lg italic text-[var(--clinic-accent-text)]">
+          <h1 className="font-serif text-3xl font-bold leading-tight text-[#383431] sm:text-4xl md:text-5xl">
             About our clinic
-          </p>
-          <h1 className="mt-2 font-serif text-3xl font-bold leading-tight text-[#383431] sm:text-4xl md:text-5xl">
-            {currentClinic.shortName}
           </h1>
           <p className="mt-4 text-base leading-7 sm:text-lg sm:leading-8">
             We provide personal and affordable health care for your pets, with a
